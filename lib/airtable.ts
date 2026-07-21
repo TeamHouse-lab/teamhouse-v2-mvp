@@ -30,13 +30,15 @@ function requireEnv(name: string): string {
 function getApiKey() {
   return requireEnv('AIRTABLE_API_KEY');
 }
+
 function getBaseId() {
   return requireEnv('AIRTABLE_BASE_ID');
 }
+
 const TABLES = {
-  sejours:       () => AIRTABLE_TABLES.SEJOURS,
-  hebergements:  () => AIRTABLE_TABLES.HEBERGEMENTS,
-  activites:     () => AIRTABLE_TABLES.ACTIVITES,
+  sejours: () => AIRTABLE_TABLES.SEJOURS,
+  hebergements: () => AIRTABLE_TABLES.HEBERGEMENTS,
+  activites: () => AIRTABLE_TABLES.ACTIVITES,
 };
 
 // ==============================================
@@ -63,15 +65,17 @@ async function airtableFetch<T>(
     // Next.js: pas de cache par défaut sur données dynamiques
     cache: 'no-store',
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Airtable ${res.status}: ${text}`);
   }
+
   return (await res.json()) as T;
 }
 
 async function listAll<T>(
-  tableName: string,
+  tableId: string,
   params: Record<string, string | number | string[]> = {},
 ): Promise<AirtableRecord<T>[]> {
   const records: AirtableRecord<T>[] = [];
@@ -79,17 +83,23 @@ async function listAll<T>(
 
   do {
     const qs = new URLSearchParams();
+
     for (const [k, v] of Object.entries(params)) {
-      if (Array.isArray(v)) v.forEach((x) => qs.append(k, String(x)));
-      else qs.append(k, String(v));
+      if (Array.isArray(v)) {
+        v.forEach((x) => qs.append(k, String(x)));
+      } else {
+        qs.append(k, String(v));
+      }
     }
+
     qs.set('pageSize', '100');
     if (offset) qs.set('offset', offset);
 
-    // Note: tableName est un ID de table (ex: tblt35hl2mtdHNpP8), pas le nom
+    const query = qs.toString();
     const page = await airtableFetch<AirtableListResponse<T>>(
-      `${tableName}?${qs.toString()}`,
+      query ? `${tableId}?${query}` : tableId,
     );
+
     records.push(...page.records);
     offset = page.offset;
   } while (offset);
@@ -112,29 +122,36 @@ export async function getHebergements(
   opts: GetHebergementsOptions = {},
 ): Promise<Hebergement[]> {
   const filters: string[] = [];
+
   if (opts.onlyActive !== false) {
     filters.push(`{Statut}='Actif'`);
   }
+
   if (opts.region) {
     filters.push(`{Region}='${escapeFormula(opts.region)}'`);
   }
+
   if (opts.minCapacite) {
     filters.push(`{Capacite max}>=${Math.floor(opts.minCapacite)}`);
   }
 
   const params: Record<string, string> = {};
-  if (filters.length) {
+
+  if (filters.length > 0) {
     params['filterByFormula'] =
       filters.length === 1 ? filters[0] : `AND(${filters.join(',')})`;
   }
-  if (opts.limit) params['maxRecords'] = String(opts.limit);
+
+  if (opts.limit) {
+    params['maxRecords'] = String(opts.limit);
+  }
 
   return listAll<HebergementFields>(TABLES.hebergements(), params);
 }
 
 export async function getHebergementById(id: string): Promise<Hebergement> {
   return airtableFetch<Hebergement>(
-    `${encodeURIComponent(TABLES.hebergements())}/${id}`,
+    `${TABLES.hebergements()}/${encodeURIComponent(id)}`,
   );
 }
 
@@ -153,17 +170,29 @@ export async function getActivites(
   opts: GetActivitesOptions = {},
 ): Promise<Activite[]> {
   const filters: string[] = [];
-  if (opts.onlyActive !== false) filters.push(`{Statut}='Actif'`);
-  if (opts.region) filters.push(`{Region}='${escapeFormula(opts.region)}'`);
-  if (opts.categorie)
+
+  if (opts.onlyActive !== false) {
+    filters.push(`{Statut}='Actif'`);
+  }
+
+  if (opts.region) {
+    filters.push(`{Region}='${escapeFormula(opts.region)}'`);
+  }
+
+  if (opts.categorie) {
     filters.push(`{Categorie}='${escapeFormula(opts.categorie)}'`);
+  }
 
   const params: Record<string, string> = {};
-  if (filters.length) {
+
+  if (filters.length > 0) {
     params['filterByFormula'] =
       filters.length === 1 ? filters[0] : `AND(${filters.join(',')})`;
   }
-  if (opts.limit) params['maxRecords'] = String(opts.limit);
+
+  if (opts.limit) {
+    params['maxRecords'] = String(opts.limit);
+  }
 
   return listAll<ActiviteFields>(TABLES.activites(), params);
 }
@@ -176,7 +205,7 @@ export async function createSejour(
   fields: Partial<SejourFields>,
 ): Promise<Sejour> {
   const body = { fields, typecast: true };
-  return airtableFetch<Sejour>(encodeURIComponent(TABLES.sejours()), {
+  return airtableFetch<Sejour>(TABLES.sejours(), {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -188,7 +217,7 @@ export async function updateSejour(
 ): Promise<Sejour> {
   const body = { fields, typecast: true };
   return airtableFetch<Sejour>(
-    `${encodeURIComponent(TABLES.sejours())}/${id}`,
+    `${TABLES.sejours()}/${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
       body: JSON.stringify(body),
@@ -198,7 +227,7 @@ export async function updateSejour(
 
 export async function getSejourById(id: string): Promise<Sejour> {
   return airtableFetch<Sejour>(
-    `${encodeURIComponent(TABLES.sejours())}/${id}`,
+    `${TABLES.sejours()}/${encodeURIComponent(id)}`,
   );
 }
 
