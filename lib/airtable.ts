@@ -132,7 +132,7 @@ export async function getHebergements(
   }
 
   if (opts.minCapacite) {
-    filters.push(`{Capacite max}>=${Math.floor(opts.minCapacite)}`);
+    filters.push(`{Nombre de couchages}>=${Math.floor(opts.minCapacite)}`);
   }
 
   const params: Record<string, string> = {};
