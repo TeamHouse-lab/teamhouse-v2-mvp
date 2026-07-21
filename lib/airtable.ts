@@ -93,6 +93,8 @@ async function listAll<T>(
     records.push(...page.records);
     offset = page.offset;
   } while (offset);
+
+  return records;
 }
 
 // ==============================================
