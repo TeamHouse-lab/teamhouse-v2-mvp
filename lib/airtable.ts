@@ -16,6 +16,7 @@ import type {
   Sejour,
   SejourFields,
 } from './types';
+import { AIRTABLE_TABLES } from './constants';
 
 // ----- Config -----
 const AIRTABLE_API = 'https://api.airtable.com/v0';
@@ -32,15 +33,10 @@ function getApiKey() {
 function getBaseId() {
   return requireEnv('AIRTABLE_BASE_ID');
 }
-function tbl(envName: string, fallback: string) {
-  return process.env[envName] || fallback;
-}
-
 const TABLES = {
-  sejours:       () => tbl('AIRTABLE_TABLE_SEJOURS', 'Sejour'),
-  hebergements:  () => tbl('AIRTABLE_TABLE_HEBERGEMENTS', 'Hebergements'),
-  activites:     () => tbl('AIRTABLE_TABLE_ACTIVITES', 'Activites'),
-  prestations:   () => tbl('AIRTABLE_TABLE_PRESTATIONS', 'Prestations'),
+  sejours:       () => AIRTABLE_TABLES.SEJOURS,
+  hebergements:  () => AIRTABLE_TABLES.HEBERGEMENTS,
+  activites:     () => AIRTABLE_TABLES.ACTIVITES,
 };
 
 // ==============================================
@@ -90,14 +86,13 @@ async function listAll<T>(
     qs.set('pageSize', '100');
     if (offset) qs.set('offset', offset);
 
+    // Note: tableName est un ID de table (ex: tblt35hl2mtdHNpP8), pas le nom
     const page = await airtableFetch<AirtableListResponse<T>>(
-      `${encodeURIComponent(tableName)}?${qs.toString()}`,
+      `${tableName}?${qs.toString()}`,
     );
     records.push(...page.records);
     offset = page.offset;
   } while (offset);
-
-  return records;
 }
 
 // ==============================================

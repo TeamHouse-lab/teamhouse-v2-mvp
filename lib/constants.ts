@@ -90,6 +90,14 @@ export const SEJOUR_STATUSES = {
   CANCELLED: 'Annulé',
 } as const;
 
+// ----- Tables Airtable (IDs) -----
+// Utiliser les IDs au lieu des noms pour éviter les problèmes d'encodage (accents, etc.)
+export const AIRTABLE_TABLES = {
+  HEBERGEMENTS: 'tblt35hl2mtdHNpP8',
+  ACTIVITES: 'tblS5Z8Bgm2TxXWps',
+  SEJOURS: 'tblE8nJE5jJOyV1fS',
+} as const;
+
 // ----- Contact / branding -----
 export const TH_INFO = {
   name: 'TeamHouse',
