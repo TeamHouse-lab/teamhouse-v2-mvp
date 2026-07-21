@@ -123,14 +123,12 @@ export async function getHebergements(
 ): Promise<Hebergement[]> {
   const filters: string[] = [];
 
-  if (opts.onlyActive !== false) {
-    filters.push(`{Statut}='Actif'`);
-  }
-
+  // fldizC4ZnViNFl9v5 = Région
   if (opts.region) {
-    filters.push(`{Region}='${escapeFormula(opts.region)}'`);
+    filters.push(`{Région}='${escapeFormula(opts.region)}'`);
   }
 
+  // fldEDhHFXZ4g0ilhU = Nombre de couchages
   if (opts.minCapacite) {
     filters.push(`{Nombre de couchages}>=${Math.floor(opts.minCapacite)}`);
   }
@@ -171,12 +169,8 @@ export async function getActivites(
 ): Promise<Activite[]> {
   const filters: string[] = [];
 
-  if (opts.onlyActive !== false) {
-    filters.push(`{Statut}='Actif'`);
-  }
-
   if (opts.region) {
-    filters.push(`{Region}='${escapeFormula(opts.region)}'`);
+    filters.push(`{Région}='${escapeFormula(opts.region)}'`);
   }
 
   if (opts.categorie) {
