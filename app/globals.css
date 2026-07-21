@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  background: theme('colors.th.beige');
+  color: theme('colors.th.ink');
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-th
+      bg-th-green text-white font-medium
+      hover:bg-th-green-light active:bg-th-green-dark
+      transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-th
+      bg-th-cream text-th-green border border-th-border font-medium
+      hover:bg-white transition-colors;
+  }
+  .btn-coral {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-th
+      bg-th-coral text-white font-medium
+      hover:bg-th-coral-light active:bg-th-coral-dark
+      transition-colors;
+  }
+  .input {
+    @apply w-full rounded-th border border-th-border bg-white px-4 py-2.5
+      text-th-ink placeholder-th-muted
+      focus:outline-none focus:ring-2 focus:ring-th-green/30 focus:border-th-green
+      transition-colors;
+  }
+  .label {
+    @apply block text-sm font-medium text-th-green mb-1.5;
+  }
+  .card {
+    @apply bg-white rounded-th shadow-th border border-th-border/60 p-6;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm
+      border border-th-border bg-th-cream text-th-green cursor-pointer
+      hover:bg-th-beige-dark/40 transition-colors;
+  }
+  .chip-active {
+    @apply bg-th-green text-white border-th-green hover:bg-th-green-light;
+  }
+}
