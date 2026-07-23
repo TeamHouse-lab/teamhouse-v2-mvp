@@ -6,6 +6,9 @@ import type { Hebergement } from '@/lib/types';
 export default function HomePage() {
   const [hebergements, setHebergements] = useState<Hebergement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateDebut, setDateDebut] = useState('');
+  const [dateFin, setDateFin] = useState('');
+  const [participants, setParticipants] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -21,6 +24,15 @@ export default function HomePage() {
     }
     load();
   }, []);
+
+  const handleSearch = () => {
+    if (!dateDebut || !dateFin || !participants) {
+      alert('Veuillez remplir tous les champs');
+      return;
+    }
+    // Scroll to maisons section
+    document.getElementById('maisons')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="w-full">
@@ -40,18 +52,38 @@ export default function HomePage() {
           </div>
 
           {/* SEARCH BOX */}
-          <div className="card bg-white max-w-2xl mx-auto shadow-th-lg">
-            <div className="grid md:grid-cols-3 gap-4">
+          <div className="card bg-white max-w-4xl mx-auto shadow-th-lg">
+            <div className="grid md:grid-cols-4 gap-4">
               <div>
-                <label className="label">Dates</label>
-                <input type="date" className="input" />
+                <label className="label">Arrivée</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={dateDebut}
+                  onChange={(e) => setDateDebut(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label">Départ</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={dateFin}
+                  onChange={(e) => setDateFin(e.target.value)}
+                />
               </div>
               <div>
                 <label className="label">Participants</label>
-                <input type="number" className="input" placeholder="20" />
+                <input 
+                  type="number" 
+                  className="input" 
+                  placeholder="20"
+                  value={participants}
+                  onChange={(e) => setParticipants(e.target.value)}
+                />
               </div>
               <div className="flex items-end">
-                <button className="w-full btn-coral">Trouver une maison</button>
+                <button onClick={handleSearch} className="w-full btn-coral">Chercher →</button>
               </div>
             </div>
           </div>
@@ -59,7 +91,7 @@ export default function HomePage() {
       </section>
 
       {/* TOP 6 MAISONS */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section id="maisons" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
           <h2 className="font-serif text-4xl text-th-green mb-3">Top 6 de notre collection</h2>
           <p className="text-th-green/70">Découvrez nos maisons les plus appréciées par les équipes</p>
@@ -77,7 +109,7 @@ export default function HomePage() {
               const region = h.fields['Région'];
 
               return (
-                <div key={h.id} className="card overflow-hidden hover:shadow-th-lg transition">
+                <div key={h.id} className="card overflow-hidden hover:shadow-th-lg transition cursor-pointer">
                   {photo && (
                     <div className="h-48 -mx-6 -mt-6 mb-4 overflow-hidden">
                       <img src={photo} alt={nom} className="w-full h-full object-cover" />
