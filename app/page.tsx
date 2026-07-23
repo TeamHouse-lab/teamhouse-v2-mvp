@@ -24,7 +24,7 @@ export default function HomePage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/airtable/hebergements?limit=12');
+        const res = await fetch('/api/airtable/hebergements');
         const json = await res.json();
         if (json.success) setHebergements(json.data);
       } catch (e) {
