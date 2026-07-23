@@ -125,9 +125,10 @@ export async function getHebergements(
     filters.push(`{Nombre de couchages}>=${Math.floor(opts.minCapacite)}`);
   }
 
-  if (opts.onlyActive !== false) {
-    filters.push(`{Statut}='Actif'`);
-  }
+  // Note: onlyActive filter temporarily disabled for debugging
+  // if (opts.onlyActive !== false) {
+  //   filters.push(`{Statut}='Actif'`);
+  // }
 
   const params: Record<string, string> = {};
 
@@ -190,9 +191,10 @@ export async function getActivites(
     filters.push(`{Type}='${escapeFormula(opts.type)}'`);
   }
 
-  if (opts.onlyActive !== false) {
-    filters.push(`{Visible sur l'app}=TRUE()`);
-  }
+  // Note: onlyActive filter temporarily disabled for debugging
+  // if (opts.onlyActive !== false) {
+  //   filters.push(`{Visible sur l'app}=TRUE()`);
+  // }
 
   const params: Record<string, string> = {};
 
