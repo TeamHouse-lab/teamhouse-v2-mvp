@@ -121,6 +121,8 @@ export default function Step4Services({ value, details, onChange, onNext, onBack
               const cover = a.fields.Photos?.[0]?.url;
               const perPax = a.fields['Prix HT'];
               const prixClient = perPax ? perPax / (1 - 0.15) : undefined;
+              const nomStr = typeof a.fields.Nom === 'string' ? a.fields.Nom : String(a.fields.Nom || 'Sans nom');
+              const categStr = typeof a.fields.Categorie === 'string' ? a.fields.Categorie : undefined;
               return (
                 <button
                   key={a.id}
@@ -135,17 +137,17 @@ export default function Step4Services({ value, details, onChange, onNext, onBack
                 >
                   {cover && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cover} alt={a.fields.Nom} className="w-full h-32 object-cover" />
+                    <img src={cover} alt={nomStr} className="w-full h-32 object-cover" />
                   )}
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div className="font-medium text-th-green leading-tight text-sm">
-                        {a.fields.Nom}
+                        {nomStr}
                       </div>
                       {selected && <span className="text-th-coral text-xs">✓</span>}
                     </div>
                     <div className="text-xs text-th-muted flex items-center gap-2">
-                      {a.fields.Categorie && <span>{a.fields.Categorie}</span>}
+                      {categStr && <span>{categStr}</span>}
                       {a.fields.Duree && <span>· {a.fields.Duree}</span>}
                     </div>
                     {prixClient && (
