@@ -11,7 +11,15 @@ export default function HomePage() {
   const [participants, setParticipants] = useState('');
   const [region, setRegion] = useState('');
 
-  const regions = ['Île-de-France', 'Provence', 'Normandie', 'Bretagne', 'Occitanie', 'Auvergne', 'Rhône-Alpes', 'Nouvelle-Aquitaine'];
+  const regions = [
+    'Provence Alpes Côte d\'Azur',
+    'Auvergne-Rhône-Alpes',
+    'Nouvelle-Aquitaine',
+    'Île-de-France',
+    'Normandie',
+    'Bretagne',
+    'Occitanie',
+  ];
 
   useEffect(() => {
     async function load() {
