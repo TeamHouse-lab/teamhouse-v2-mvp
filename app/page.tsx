@@ -124,13 +124,48 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* L'EXPERIENCE TEAMHOUSE */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <h2 className="font-serif text-4xl text-th-green text-center mb-12">L'expérience TeamHouse</h2>
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="border-l-4 border-th-coral pl-6">
+            <h3 className="font-serif text-2xl text-th-green mb-3">Privatisé</h3>
+            <p className="text-th-green/70">
+              Un cadre exclusif pour une cohésion maximale. Un environnement favorisant la confiance et la communication ouverte où l'équipe peut vraiment se retrouver et créer des liens authentiques.
+            </p>
+          </div>
+          <div className="border-l-4 border-th-coral pl-6">
+            <h3 className="font-serif text-2xl text-th-green mb-3">Clé-en-main</h3>
+            <p className="text-th-green/70">
+              Travaillez, partagez, on s'occupe du reste. Livraison de courses et menus de saison, animations… on s'occupe de tout et tout est inclus ! Un seul point de contact pour une organisation 100% fluide.
+            </p>
+          </div>
+          <div className="border-l-4 border-th-coral pl-6">
+            <h3 className="font-serif text-2xl text-th-green mb-3">All inclusive</h3>
+            <p className="text-th-green/70">
+              Un budget clair, zéro surprise. Hébergement, restauration, espaces de travail et activités : tout est inclus. Pas de coûts cachés, pas de mauvaise surprise, juste une expérience sur-mesure.
+            </p>
+          </div>
+          <div className="border-l-4 border-th-coral pl-6">
+            <h3 className="font-serif text-2xl text-th-green mb-3">Participatif</h3>
+            <p className="text-th-green/70">
+              Un séminaire qui engage, pas juste un séjour. Chaque collaborateur est acteur de l'expérience. On casse les silos, on crée des moments qui comptent. Des équipes plus impliquées et performantes.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA FINAL */}
-      <section className="max-w-6xl mx-auto px-6 py-20 text-center">
-        <h2 className="font-serif text-4xl text-th-green mb-6">Prêt à organiser votre séjour ?</h2>
-        <p className="text-lg text-th-green/80 mb-8 max-w-lg mx-auto">
-          Décrivez votre projet en quelques minutes. Recevez des propositions sur mesure.
-        </p>
-        <button className="btn-coral text-lg">Demander un devis →</button>
+      <section className="bg-th-green text-white py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="font-serif text-4xl mb-6">Prêt à organiser votre séjour ?</h2>
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+            Décrivez votre projet en quelques minutes. Recevez des propositions sur mesure dans des maisons privatisées, aux quatre coins de la France.
+          </p>
+          <button className="inline-block px-8 py-4 bg-th-coral text-white font-semibold rounded hover:bg-th-coral/90 text-lg">
+            Demander un devis →
+          </button>
+        </div>
       </section>
     </div>
   );
