@@ -133,6 +133,7 @@ export default function Step3Budget({ value, details, onChange, onNext, onBack }
         {hebergements.map((h) => {
           const selected = value.hebergementIds?.includes(h.id);
           const cover = h.fields.Photos?.[0]?.url;
+          const nomStr = typeof h.fields.Nom === 'string' ? h.fields.Nom : String(h.fields.Nom || 'Sans nom');
           return (
             <button
               key={h.id}
@@ -148,17 +149,17 @@ export default function Step3Budget({ value, details, onChange, onNext, onBack }
               {cover ? (
                 <div className="relative w-full h-40 bg-th-cream">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cover} alt={h.fields.Nom} className="w-full h-full object-cover" />
+                  <img src={cover} alt={nomStr} className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="w-full h-40 bg-gradient-to-br from-th-beige-dark to-th-cream flex items-center justify-center font-serif text-th-green/50">
-                  {h.fields.Nom?.charAt(0) || '?'}
+                  {nomStr.charAt(0) || '?'}
                 </div>
               )}
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="font-serif text-lg text-th-green leading-tight">
-                    {h.fields.Nom}
+                    {nomStr}
                   </div>
                   {selected && (
                     <span className="text-th-coral text-sm shrink-0">✓ Choisi</span>
