@@ -9,11 +9,14 @@ export default function HomePage() {
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [participants, setParticipants] = useState('');
+  const [region, setRegion] = useState('');
+
+  const regions = ['Île-de-France', 'Provence', 'Normandie', 'Bretagne', 'Occitanie', 'Auvergne', 'Rhône-Alpes', 'Nouvelle-Aquitaine'];
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/airtable/hebergements?limit=6');
+        const res = await fetch('/api/airtable/hebergements?limit=12');
         const json = await res.json();
         if (json.success) setHebergements(json.data);
       } catch (e) {
@@ -34,6 +37,10 @@ export default function HomePage() {
     document.getElementById('maisons')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const filteredHebergements = region
+    ? hebergements.filter((h) => h.fields['Région'] === region)
+    : hebergements;
+
   return (
     <div className="w-full">
       {/* HERO */}
@@ -52,8 +59,21 @@ export default function HomePage() {
           </div>
 
           {/* SEARCH BOX */}
-          <div className="card bg-white max-w-4xl mx-auto shadow-th-lg">
-            <div className="grid md:grid-cols-4 gap-4">
+          <div className="card bg-white max-w-5xl mx-auto shadow-th-lg">
+            <div className="grid md:grid-cols-5 gap-4">
+              <div>
+                <label className="label">Lieu</label>
+                <select 
+                  className="input"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                >
+                  <option value="">Choisir une région</option>
+                  {regions.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="label">Arrivée</label>
                 <input 
@@ -90,18 +110,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TOP 6 MAISONS */}
+      {/* TOP MAISONS */}
       <section id="maisons" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
-          <h2 className="font-serif text-4xl text-th-green mb-3">Top 6 de notre collection</h2>
-          <p className="text-th-green/70">Découvrez nos maisons les plus appréciées par les équipes</p>
+          <h2 className="font-serif text-4xl text-th-green mb-3">
+            {region ? `Maisons en ${region}` : 'Notre collection'}
+          </h2>
+          <p className="text-th-green/70">
+            {filteredHebergements.length} maison{filteredHebergements.length > 1 ? 's' : ''} disponible{filteredHebergements.length > 1 ? 's' : ''}
+          </p>
         </div>
 
         {loading ? (
           <p className="text-center text-th-muted">Chargement...</p>
+        ) : filteredHebergements.length === 0 ? (
+          <p className="text-center text-th-muted py-12">Aucune maison trouvée pour cette région.</p>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hebergements.map((h) => {
+            {filteredHebergements.map((h) => {
               const photo = h.fields['Photos']?.[0]?.url;
               const nom = h.fields['Nom'];
               const commune = h.fields['Commune'];
