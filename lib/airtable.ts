@@ -1,24 +1,26 @@
 /**
- * Client Airtable - accès REST à la base Webapp TeamHouse
- *
- * On utilise l'API REST directement (pas le SDK `airtable`) pour rester léger,
- * cachable, et exécutable en edge/serverless sans dépendance Node.
- *
+ * Client Airtable — accès REST à la base Webapp TeamHouse
+ * Base: appFWg6elYrhlYYip
+ * 
+ * Utilise l'API REST directement pour rester léger, cachable et serverless-friendly.
  * Doc: https://airtable.com/developers/web/api/introduction
  */
 
 import type {
-  Activite,
-  ActiviteFields,
-  AirtableRecord,
   Hebergement,
   HebergementFields,
+  Activite,
+  ActiviteFields,
   Sejour,
   SejourFields,
+  AirtableListResponse,
 } from './types';
 import { AIRTABLE_TABLES } from './constants';
 
-// ----- Config -----
+// ============================================
+// Config & Helpers
+// ============================================
+
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 
 function requireEnv(name: string): string {
@@ -35,21 +37,6 @@ function getBaseId() {
   return requireEnv('AIRTABLE_BASE_ID');
 }
 
-const TABLES = {
-  sejours: () => AIRTABLE_TABLES.SEJOURS,
-  hebergements: () => AIRTABLE_TABLES.HEBERGEMENTS,
-  activites: () => AIRTABLE_TABLES.ACTIVITES,
-};
-
-// ==============================================
-// HTTP helpers
-// ==============================================
-
-interface AirtableListResponse<T> {
-  records: AirtableRecord<T>[];
-  offset?: string;
-}
-
 async function airtableFetch<T>(
   path: string,
   init: RequestInit = {},
@@ -62,8 +49,7 @@ async function airtableFetch<T>(
       'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
-    // Next.js: pas de cache par défaut sur données dynamiques
-    cache: 'no-store',
+    cache: 'no-store', // Données dynamiques, pas de cache
   });
 
   if (!res.ok) {
@@ -77,8 +63,8 @@ async function airtableFetch<T>(
 async function listAll<T>(
   tableId: string,
   params: Record<string, string | number | string[]> = {},
-): Promise<AirtableRecord<T>[]> {
-  const records: AirtableRecord<T>[] = [];
+): Promise<Array<{ id: string; fields: T }>> {
+  const records: Array<{ id: string; fields: T }> = [];
   let offset: string | undefined;
 
   do {
@@ -107,9 +93,13 @@ async function listAll<T>(
   return records;
 }
 
-// ==============================================
+function escapeFormula(v: string): string {
+  return v.replace(/'/g, "\\'");
+}
+
+// ============================================
 // HEBERGEMENTS
-// ==============================================
+// ============================================
 
 export interface GetHebergementsOptions {
   region?: string;
@@ -118,19 +108,25 @@ export interface GetHebergementsOptions {
   limit?: number;
 }
 
+/**
+ * Récupère les hébergements filtrés
+ * Critères: région, capacité minimale
+ */
 export async function getHebergements(
   opts: GetHebergementsOptions = {},
 ): Promise<Hebergement[]> {
   const filters: string[] = [];
 
-  // fldizC4ZnViNFl9v5 = Région
   if (opts.region) {
     filters.push(`{Région}='${escapeFormula(opts.region)}'`);
   }
 
-  // fldEDhHFXZ4g0ilhU = Nombre de couchages
   if (opts.minCapacite) {
     filters.push(`{Nombre de couchages}>=${Math.floor(opts.minCapacite)}`);
+  }
+
+  if (opts.onlyActive !== false) {
+    filters.push(`{Statut}='Actif'`);
   }
 
   const params: Record<string, string> = {};
@@ -144,37 +140,58 @@ export async function getHebergements(
     params['maxRecords'] = String(opts.limit);
   }
 
-  return listAll<HebergementFields>(TABLES.hebergements(), params);
+  const records = await listAll<HebergementFields>(
+    AIRTABLE_TABLES.HEBERGEMENTS,
+    params,
+  );
+
+  return records.map((r) => ({
+    id: r.id,
+    fields: r.fields,
+    createdTime: '', // optionnel
+  }));
 }
 
 export async function getHebergementById(id: string): Promise<Hebergement> {
-  return airtableFetch<Hebergement>(
-    `${TABLES.hebergements()}/${encodeURIComponent(id)}`,
+  const rec = await airtableFetch<{ id: string; fields: HebergementFields }>(
+    `${AIRTABLE_TABLES.HEBERGEMENTS}/${encodeURIComponent(id)}`,
   );
+  return {
+    id: rec.id,
+    fields: rec.fields,
+    createdTime: '',
+  };
 }
 
-// ==============================================
+// ============================================
 // ACTIVITES
-// ==============================================
+// ============================================
 
 export interface GetActivitesOptions {
   region?: string;
-  categorie?: string;
+  type?: string;
   onlyActive?: boolean;
   limit?: number;
 }
 
+/**
+ * Récupère les activités filtrées
+ */
 export async function getActivites(
   opts: GetActivitesOptions = {},
 ): Promise<Activite[]> {
   const filters: string[] = [];
 
   if (opts.region) {
-    filters.push(`{Région}='${escapeFormula(opts.region)}'`);
+    filters.push(`{Département}='${escapeFormula(opts.region)}'`);
   }
 
-  if (opts.categorie) {
-    filters.push(`{Categorie}='${escapeFormula(opts.categorie)}'`);
+  if (opts.type) {
+    filters.push(`{Type}='${escapeFormula(opts.type)}'`);
+  }
+
+  if (opts.onlyActive !== false) {
+    filters.push(`{Visible sur l'app}=TRUE()`);
   }
 
   const params: Record<string, string> = {};
@@ -188,48 +205,127 @@ export async function getActivites(
     params['maxRecords'] = String(opts.limit);
   }
 
-  return listAll<ActiviteFields>(TABLES.activites(), params);
+  const records = await listAll<ActiviteFields>(
+    AIRTABLE_TABLES.ACTIVITES,
+    params,
+  );
+
+  return records.map((r) => ({
+    id: r.id,
+    fields: r.fields,
+    createdTime: '',
+  }));
 }
 
-// ==============================================
-// SEJOURS
-// ==============================================
+export async function getActiviteById(id: string): Promise<Activite> {
+  const rec = await airtableFetch<{ id: string; fields: ActiviteFields }>(
+    `${AIRTABLE_TABLES.ACTIVITES}/${encodeURIComponent(id)}`,
+  );
+  return {
+    id: rec.id,
+    fields: rec.fields,
+    createdTime: '',
+  };
+}
 
+// ============================================
+// SEJOURS
+// ============================================
+
+/**
+ * Crée un nouveau séjour dans Airtable
+ * Appelé après la soumission du brief wizard
+ */
 export async function createSejour(
   fields: Partial<SejourFields>,
 ): Promise<Sejour> {
   const body = { fields, typecast: true };
-  return airtableFetch<Sejour>(TABLES.sejours(), {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  const rec = await airtableFetch<{ id: string; fields: SejourFields }>(
+    AIRTABLE_TABLES.SEJOURS,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+  );
+  return {
+    id: rec.id,
+    fields: rec.fields,
+    createdTime: new Date().toISOString(),
+  };
 }
 
+/**
+ * Met à jour un séjour existant
+ */
 export async function updateSejour(
   id: string,
   fields: Partial<SejourFields>,
 ): Promise<Sejour> {
   const body = { fields, typecast: true };
-  return airtableFetch<Sejour>(
-    `${TABLES.sejours()}/${encodeURIComponent(id)}`,
+  const rec = await airtableFetch<{ id: string; fields: SejourFields }>(
+    `${AIRTABLE_TABLES.SEJOURS}/${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
       body: JSON.stringify(body),
     },
   );
+  return {
+    id: rec.id,
+    fields: rec.fields,
+    createdTime: '',
+  };
 }
 
 export async function getSejourById(id: string): Promise<Sejour> {
-  return airtableFetch<Sejour>(
-    `${TABLES.sejours()}/${encodeURIComponent(id)}`,
+  const rec = await airtableFetch<{ id: string; fields: SejourFields }>(
+    `${AIRTABLE_TABLES.SEJOURS}/${encodeURIComponent(id)}`,
   );
+  return {
+    id: rec.id,
+    fields: rec.fields,
+    createdTime: '',
+  };
 }
 
-// ==============================================
-// Utils
-// ==============================================
+/**
+ * Récupère les séjours du client (par mail)
+ */
+export async function getSejoursByClient(
+  mailClient: string,
+): Promise<Sejour[]> {
+  const filters = `OR(
+    {Mail Organisateur 1}='${escapeFormula(mailClient)}',
+    {Mail Organisateur 2}='${escapeFormula(mailClient)}'
+  )`;
 
-/** Airtable formulas: échapper les apostrophes */
-function escapeFormula(v: string): string {
-  return v.replace(/'/g, "\\'");
+  const records = await listAll<SejourFields>(AIRTABLE_TABLES.SEJOURS, {
+    filterByFormula: filters,
+    maxRecords: '50',
+  });
+
+  return records.map((r) => ({
+    id: r.id,
+    fields: r.fields,
+    createdTime: '',
+  }));
+}
+
+// ============================================
+// Health check
+// ============================================
+
+/**
+ * Teste la connexion à Airtable
+ */
+export async function testConnection(): Promise<boolean> {
+  try {
+    const records = await listAll<HebergementFields>(
+      AIRTABLE_TABLES.HEBERGEMENTS,
+      { maxRecords: '1' },
+    );
+    return records.length >= 0;
+  } catch (e) {
+    console.error('[Airtable] Connection test failed:', e);
+    return false;
+  }
 }

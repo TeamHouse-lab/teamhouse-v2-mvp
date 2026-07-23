@@ -6,16 +6,16 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/airtable/activites
- *  Query: region, categorie, limit
+ *  Query: region (département), type, limit
  *
- * curl "http://localhost:3000/api/airtable/activites?categorie=Sport"
+ * curl "http://localhost:3000/api/airtable/activites?type=Sport&limit=10"
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const records = await getActivites({
       region: searchParams.get('region') || undefined,
-      categorie: searchParams.get('categorie') || undefined,
+      type: searchParams.get('type') || undefined,
       limit: searchParams.get('limit')
         ? Number(searchParams.get('limit'))
         : undefined,

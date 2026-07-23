@@ -16,14 +16,14 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const region = searchParams.get('region') || undefined;
-    const minCap = searchParams.get('minCapacite');
-    const limit = searchParams.get('limit');
-
     const records = await getHebergements({
-      region,
-      minCapacite: minCap ? Number(minCap) : undefined,
-      limit: limit ? Number(limit) : undefined,
+      region: searchParams.get('region') || undefined,
+      minCapacite: searchParams.get('minCapacite')
+        ? Number(searchParams.get('minCapacite'))
+        : undefined,
+      limit: searchParams.get('limit')
+        ? Number(searchParams.get('limit'))
+        : undefined,
     });
 
     const body: ApiResponse<typeof records> = { success: true, data: records };

@@ -1,91 +1,71 @@
 /**
- * Schémas Zod - validation form + API
+ * Validation utilities pour les formulaires
  */
 
-import { z } from 'zod';
-import {
-  MIN_PARTICIPANTS,
-  MAX_PARTICIPANTS,
-  MIN_NIGHTS,
-  MAX_NIGHTS,
-} from './constants';
+export function validateEmail(email: string): boolean {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
 
-// ==============================================
-// STEPS
-// ==============================================
+export function validatePhone(phone: string): boolean {
+  const re = /^[\d\s\-\+\(\)]+$/;
+  return re.test(phone) && phone.replace(/\D/g, '').length >= 9;
+}
 
-export const OrganizationSchema = z.object({
-  companyName: z.string().min(2, 'Nom de l\'entreprise requis'),
-  contactFirstName: z.string().min(1, 'Prénom requis'),
-  contactLastName: z.string().min(1, 'Nom requis'),
-  contactEmail: z.string().email('Email invalide'),
-  contactPhone: z.string().optional(),
-  contactRole: z.string().optional(),
-  companySize: z.string().optional(),
-});
-export type OrganizationInput = z.infer<typeof OrganizationSchema>;
+export function validateName(name: string): boolean {
+  return name.trim().length >= 2 && name.trim().length <= 100;
+}
 
-export const DetailsSchema = z
-  .object({
-    sejourType: z.string().min(1, 'Type de séjour requis'),
-    objectifs: z.array(z.string()).min(1, 'Choisissez au moins un objectif'),
-    nbParticipants: z
-      .number({ invalid_type_error: 'Nombre requis' })
-      .int()
-      .min(MIN_PARTICIPANTS, `Minimum ${MIN_PARTICIPANTS} participants`)
-      .max(MAX_PARTICIPANTS, `Maximum ${MAX_PARTICIPANTS} participants`),
-    dateStart: z.string().min(1, 'Date de début requise'),
-    dateEnd: z.string().min(1, 'Date de fin requise'),
-    nbNights: z
-      .number()
-      .int()
-      .min(MIN_NIGHTS)
-      .max(MAX_NIGHTS),
-    region: z.string().optional(),
-    ville: z.string().optional(),
-    flexibilite: z.enum(['strict', 'flexible']).optional(),
-    notes: z.string().optional(),
-  })
-  .refine(
-    (data) => new Date(data.dateEnd) >= new Date(data.dateStart),
-    { message: 'La date de fin doit être après la date de début', path: ['dateEnd'] },
-  );
-export type DetailsInput = z.infer<typeof DetailsSchema>;
+export function validateBudget(budget: number): boolean {
+  return budget > 0;
+}
 
-export const BudgetSchema = z.object({
-  budgetTotal: z.number().positive().optional(),
-  budgetPerPerson: z.number().positive().optional(),
-  hebergementIds: z.array(z.string()).default([]),
-});
-export type BudgetInput = z.infer<typeof BudgetSchema>;
+export function validateParticipants(nb: number): boolean {
+  return nb >= 10 && nb <= 500;
+}
 
-export const ServicesSchema = z.object({
-  activiteIds: z.array(z.string()).default([]),
-  besoinTransfert: z.boolean().default(false),
-  besoinCatering: z.boolean().default(false),
-  besoinAnimateur: z.boolean().default(false),
-  autresBesoins: z.string().optional(),
-});
-export type ServicesInput = z.infer<typeof ServicesSchema>;
+export function validateDate(dateStr: string): boolean {
+  const date = new Date(dateStr);
+  return date instanceof Date && !isNaN(date.getTime());
+}
 
-// ==============================================
-// SEJOUR complet (envoyé à Airtable)
-// ==============================================
+export function validateDateRange(
+  dateDebut: string,
+  dateFin: string,
+): boolean {
+  const start = new Date(dateDebut);
+  const end = new Date(dateFin);
+  return start < end;
+}
 
-export const CreateSejourSchema = z.object({
-  organization: OrganizationSchema,
-  details: DetailsSchema,
-  budget: BudgetSchema,
-  services: ServicesSchema,
-});
-export type CreateSejourInput = z.infer<typeof CreateSejourSchema>;
+export interface ValidationError {
+  field: string;
+  message: string;
+}
 
-// ==============================================
-// STRIPE
-// ==============================================
+export function validateOrganizationData(data: any): ValidationError[] {
+  const errors: ValidationError[] = [];
 
-export const CreatePaymentIntentSchema = z.object({
-  sejourId: z.string().min(1),
-  amount: z.number().int().positive(), // centimes
-  currency: z.string().optional(),
-});
+  if (!validateName(data.nomOrganisation)) {
+    errors.push({
+      field: 'nomOrganisation',
+      message: 'Nom de l\'organisation invalide',
+    });
+  }
+
+  if (!validateEmail(data.mailContact)) {
+    errors.push({
+      field: 'mailContact',
+      message: 'Email invalide',
+    });
+  }
+
+  if (!validateParticipants(data.nombreParticipants)) {
+    errors.push({
+      field: 'nombreParticipants',
+      message: 'Nombre de participants invalide (10-500)',
+    });
+  }
+
+  return errors;
+}

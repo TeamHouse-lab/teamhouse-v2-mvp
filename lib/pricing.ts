@@ -1,87 +1,76 @@
 /**
- * Moteur de calcul de prix TeamHouse
- * Règles :
- *   - Prix client HT = Prix partenaire HT / (1 - 15%) = / 0.85
- *   - Commission TH = Prix client HT - Prix partenaire HT
- *   - Frais de service = 10% si participants < 30, sinon 0
- *   - TVA 20% sur (prix client HT + frais service)
+ * Logique de tarification TeamHouse
+ * 
+ * Prix client = Prix partenaire HT ÷ 0.85 (commission TH 15%)
+ * Frais de service = 10% du total HT (si < 30 participants)
+ * Acompte = 70% du total TTC
+ * Solde = 30% du total TTC
  */
 
-import {
-  TH_COMMISSION_RATE,
-  SERVICE_FEE_RATE,
-  SERVICE_FEE_MAX_PAX,
-  VAT_RATE,
-  DEPOSIT_RATE,
-} from './constants';
-import type { PriceBreakdown } from './types';
-
-export interface PricingInput {
-  prixPartenaireHT: number;   // total HT côté partenaire (hébergement + activités + prestations)
-  nbParticipants: number;
-  depositRate?: number;
+export interface PricingCalculation {
+  prixPartenairHT: number;
+  commissionTH: number;
+  prixHTClient: number;
+  fraisService: number;
+  sousTotal: number;
+  totalTTC: number;
+  acompte70: number;
+  solde30: number;
 }
 
 /**
- * Calcule le breakdown complet d'un séjour.
+ * Calcule le prix TTC client à partir du prix partenaire HT
  */
-export function computePriceBreakdown(input: PricingInput): PriceBreakdown {
-  const { prixPartenaireHT, nbParticipants } = input;
-  const depositRate = input.depositRate ?? DEPOSIT_RATE;
+export function calculatePrice(
+  prixPartenairHT: number,
+  nombreParticipants: number,
+  tauxTVA: number = 0.2, // 20% TVA par défaut
+): PricingCalculation {
+  // Commission TH: 15%
+  const commissionTH = prixPartenairHT * 0.15;
+  const prixHTClient = prixPartenairHT + commissionTH;
 
-  // Sanity
-  const base = Math.max(0, prixPartenaireHT);
-  const pax = Math.max(1, Math.floor(nbParticipants || 1));
+  // Frais de service: 10% (sauf si >= 30 participants)
+  const fraisService = nombreParticipants < 30 ? prixHTClient * 0.1 : 0;
 
-  // Prix client HT = prix partenaire HT / 0.85
-  const prixClientHT = base / (1 - TH_COMMISSION_RATE);
-  const commissionTH = prixClientHT - base;
+  // Sous-total HT
+  const sousTotal = prixHTClient + fraisService;
 
-  // Frais de service (10% du prix client HT, si <30 pax)
-  const serviceFeeApplied = pax < SERVICE_FEE_MAX_PAX;
-  const fraisService = serviceFeeApplied ? prixClientHT * SERVICE_FEE_RATE : 0;
+  // TVA
+  const tva = sousTotal * tauxTVA;
 
-  const totalHT = prixClientHT + fraisService;
-  const tva = totalHT * VAT_RATE;
-  const totalTTC = totalHT + tva;
+  // Total TTC
+  const totalTTC = sousTotal + tva;
 
-  const acompte = totalTTC * depositRate;
-  const solde = totalTTC - acompte;
-  const prixParPersonne = totalTTC / pax;
+  // Acompte et solde
+  const acompte70 = totalTTC * 0.7;
+  const solde30 = totalTTC * 0.3;
 
   return {
-    prixPartenaireHT: round2(base),
-    commissionTH: round2(commissionTH),
-    prixClientHT: round2(prixClientHT),
-    fraisService: round2(fraisService),
-    totalHT: round2(totalHT),
-    tva: round2(tva),
-    totalTTC: round2(totalTTC),
-    acompte: round2(acompte),
-    solde: round2(solde),
-    prixParPersonne: round2(prixParPersonne),
-    serviceFeeApplied,
+    prixPartenairHT,
+    commissionTH,
+    prixHTClient,
+    fraisService,
+    sousTotal,
+    totalTTC,
+    acompte70,
+    solde30,
   };
 }
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
-/** Formatage EUR user-facing */
+/**
+ * Formate un montant en EUR
+ */
 export function formatEUR(amount: number): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'EUR',
-    maximumFractionDigits: 0,
   }).format(amount);
 }
 
-export function formatEURPrecise(amount: number): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+/**
+ * Calcule le prix par personne
+ */
+export function pricePerPerson(totalTTC: number, nbPersonnes: number): number {
+  return nbPersonnes > 0 ? totalTTC / nbPersonnes : 0;
 }
