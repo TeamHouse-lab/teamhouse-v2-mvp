@@ -1,81 +1,136 @@
-import Link from 'next/link';
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { Hebergement } from '@/lib/types';
 
 export default function HomePage() {
-  return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
-      <section className="grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <p className="text-th-coral font-medium uppercase tracking-wider text-xs mb-3">
-            Séjours d'équipe · France
-          </p>
-          <h1 className="font-serif text-5xl md:text-6xl leading-tight text-th-green mb-6">
-            Vos séjours d'équipe, <br />
-            <span className="italic">clé-en-main.</span>
-          </h1>
-          <p className="text-lg text-th-green/80 mb-8 max-w-lg">
-            Décrivez votre projet en 5 minutes. Recevez des propositions sur mesure
-            dans des maisons privatisées, aux quatre coins de la France.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <a href="#comment" className="inline-block px-6 py-3 bg-th-coral text-white rounded font-semibold hover:bg-th-coral/90">
-              Voir nos maisons →
-            </a>
-            <a
-              href="#comment"
-              className="inline-block px-6 py-3 border border-th-green text-th-green rounded font-semibold hover:bg-th-beige"
-            >
-              Comment ça marche
-            </a>
-          </div>
-        </div>
+  const [hebergements, setHebergements] = useState<Hebergement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        <div className="relative">
-          <div className="card bg-th-cream/60 backdrop-blur">
-            <div className="text-xs uppercase tracking-wider text-th-coral mb-3">
-              Aperçu d'un séjour
-            </div>
-            <h3 className="font-serif text-2xl text-th-green mb-2">
-              Séminaire Automne · 18 pax
-            </h3>
-            <div className="text-th-green/80 text-sm space-y-1 mb-4">
-              <div>📍 Normandie · 3 nuits</div>
-              <div>🏠 Domaine privatisé · piscine, spa</div>
-              <div>🎯 Cohésion + workshop stratégique</div>
-            </div>
-            <div className="border-t border-th-border pt-4 flex justify-between items-baseline">
-              <span className="text-sm text-th-muted">Budget estimé</span>
-              <span className="font-serif text-2xl text-th-green">
-                24 500&nbsp;€ <span className="text-sm font-sans text-th-muted">TTC</span>
-              </span>
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/airtable/hebergements?limit=6');
+        const json = await res.json();
+        if (json.success) setHebergements(json.data);
+      } catch (e) {
+        console.error('Error loading:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  return (
+    <div className="w-full">
+      {/* HERO */}
+      <section className="bg-gradient-to-b from-th-beige to-white py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="text-th-coral font-medium uppercase tracking-wider text-xs mb-3">
+              Séjours d'équipe privatisés en France
+            </p>
+            <h1 className="font-serif text-5xl md:text-6xl leading-tight text-th-green mb-6">
+              Vos séjours d'équipe, <span className="italic">clé-en-main.</span>
+            </h1>
+            <p className="text-lg text-th-green/80 mb-8 max-w-2xl mx-auto">
+              Oubliez les hôtels standardisés. Maisons 100% privatisées, espaces de travail inspirants, et expériences sur-mesure pour renforcer la cohésion de votre équipe.
+            </p>
+          </div>
+
+          {/* SEARCH BOX */}
+          <div className="card bg-white max-w-2xl mx-auto shadow-th-lg">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="label">Dates</label>
+                <input type="date" className="input" />
+              </div>
+              <div>
+                <label className="label">Participants</label>
+                <input type="number" className="input" placeholder="20" />
+              </div>
+              <div className="flex items-end">
+                <button className="w-full btn-coral">Trouver une maison</button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="comment" className="mt-24 grid md:grid-cols-3 gap-6">
-        {[
-          {
-            n: '01',
-            t: 'Vous décrivez',
-            d: 'Type de séjour, dates, participants, objectifs, région. 5 minutes.',
-          },
-          {
-            n: '02',
-            t: 'On propose',
-            d: 'Sélection de maisons + activités, budget clair, transparent.',
-          },
-          {
-            n: '03',
-            t: 'Vous réservez',
-            d: 'Paiement sécurisé, contrat, on gère le séjour de A à Z.',
-          },
-        ].map((step) => (
-          <div key={step.n} className="card">
-            <div className="text-th-coral font-serif text-3xl mb-2">{step.n}</div>
-            <h3 className="font-serif text-xl text-th-green mb-2">{step.t}</h3>
-            <p className="text-th-green/70 text-sm">{step.d}</p>
+      {/* TOP 6 MAISONS */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center mb-12">
+          <h2 className="font-serif text-4xl text-th-green mb-3">Top 6 de notre collection</h2>
+          <p className="text-th-green/70">Découvrez nos maisons les plus appréciées par les équipes</p>
+        </div>
+
+        {loading ? (
+          <p className="text-center text-th-muted">Chargement...</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hebergements.map((h) => {
+              const photo = h.fields['Photos']?.[0]?.url;
+              const nom = h.fields['Nom'];
+              const commune = h.fields['Commune'];
+              const couchages = h.fields['Nombre de couchages'];
+              const region = h.fields['Région'];
+
+              return (
+                <div key={h.id} className="card overflow-hidden hover:shadow-th-lg transition">
+                  {photo && (
+                    <div className="h-48 -mx-6 -mt-6 mb-4 overflow-hidden">
+                      <img src={photo} alt={nom} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <h3 className="font-serif text-xl text-th-green mb-1">{nom}</h3>
+                  <p className="text-sm text-th-muted mb-3">{commune}, {region}</p>
+                  <p className="text-th-green/70 text-sm mb-4">{couchages} couchages</p>
+                  <button className="w-full btn-coral text-sm">Découvrir →</button>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
+      </section>
+
+      {/* 3 PILLIERS */}
+      <section className="bg-th-beige py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="font-serif text-4xl text-th-green text-center mb-12">Votre séjour d'équipe en un clic</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🏠</div>
+              <h3 className="font-serif text-2xl text-th-green mb-3">Hébergement</h3>
+              <p className="text-th-green/70">
+                Maisons 100% privatisées, soigneusement sélectionnées. Confort, détente et espaces de travail adaptés.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl mb-4">🍽️</div>
+              <h3 className="font-serif text-2xl text-th-green mb-3">Restauration</h3>
+              <p className="text-th-green/70">
+                Menus de saison, produits locaux, traiteur ou chef à domicile. Vous choisissez, on s'occupe du reste.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl mb-4">🎯</div>
+              <h3 className="font-serif text-2xl text-th-green mb-3">Activités</h3>
+              <p className="text-th-green/70">
+                Expériences sur-mesure : sport, ateliers, escape game, coaching. Renforcez la cohésion de votre équipe.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="max-w-6xl mx-auto px-6 py-20 text-center">
+        <h2 className="font-serif text-4xl text-th-green mb-6">Prêt à organiser votre séjour ?</h2>
+        <p className="text-lg text-th-green/80 mb-8 max-w-lg mx-auto">
+          Décrivez votre projet en quelques minutes. Recevez des propositions sur mesure.
+        </p>
+        <button className="btn-coral text-lg">Demander un devis →</button>
       </section>
     </div>
   );
