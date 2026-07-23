@@ -12,13 +12,19 @@ export default function HomePage() {
   const [region, setRegion] = useState('');
 
   const regions = [
-    'Provence Alpes Côte d\'Azur',
     'Auvergne-Rhône-Alpes',
-    'Nouvelle-Aquitaine',
-    'Île-de-France',
-    'Normandie',
+    'Bourgogne-Franche-Comté',
     'Bretagne',
+    'Centre-Val de Loire',
+    'Corse',
+    'Grand Est',
+    'Hauts-de-France',
+    'Ile-de-France',
+    'Normandie',
+    'Nouvelle-Aquitaine',
     'Occitanie',
+    'Pays de la Loire',
+    'Provence Alpes Côte d\'Azur',
   ];
 
   useEffect(() => {
@@ -41,12 +47,15 @@ export default function HomePage() {
       alert('Veuillez remplir tous les champs');
       return;
     }
-    // Scroll to maisons section
     document.getElementById('maisons')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const filteredHebergements = region
-    ? hebergements.filter((h) => h.fields['Région'] === region)
+    ? hebergements.filter((h) => {
+        const hRegion = h.fields['Région'];
+        if (!hRegion || !Array.isArray(hRegion)) return false;
+        return hRegion.some((r) => r.trim() === region.trim());
+      })
     : hebergements;
 
   return (
