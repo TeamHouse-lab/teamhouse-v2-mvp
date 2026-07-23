@@ -17,12 +17,12 @@ export default function HomePage() {
             dans des maisons privatisées, aux quatre coins de la France.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/brief" className="btn-coral">
-              Démarrer un projet →
-            </Link>
+            <a href="#comment" className="inline-block px-6 py-3 bg-th-coral text-white rounded font-semibold hover:bg-th-coral/90">
+              Voir nos maisons →
+            </a>
             <a
               href="#comment"
-              className="btn-secondary"
+              className="inline-block px-6 py-3 border border-th-green text-th-green rounded font-semibold hover:bg-th-beige"
             >
               Comment ça marche
             </a>
